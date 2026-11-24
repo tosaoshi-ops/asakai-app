@@ -75,9 +75,6 @@ header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:2
 .record-row button{padding:9px 12px;border:0;border-radius:8px;color:white;background:#1768c4;font-size:14px;font-weight:bold}
 .record-row button.stop{background:#c62828}
 .record-row button.delete{background:#64748b}
-#pinArea{max-width:420px;margin:50px auto;text-align:center}
-#pinInput{text-align:center;font-size:28px;letter-spacing:8px}
-
 @media(max-width:600px){
  header{font-size:19px;padding:9px}
  #home{padding:12px}
@@ -113,7 +110,7 @@ header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:2
   <button class="home-button" onclick="startMeeting('morning')">朝の会</button>
   <button class="home-button" onclick="startMeeting('closing')">帰りの会</button>
  </div>
- <button class="teacher-entry" onclick="showPin()">先生用設定</button>
+ <button class="teacher-entry" onclick="showAdminMenu()">先生用設定</button>
 </section>
 
 <section id="student" class="page">
@@ -131,19 +128,6 @@ header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:2
  <div class="student-controls">
   <button id="backBtn" onclick="goBack(event)">もどる</button>
   <button onclick="goHome(event)">最初にもどる</button>
- </div>
-</section>
-
-<section id="pinPage" class="page">
- <div class="admin-card" id="pinArea">
-  <h2>先生用設定</h2>
-  <p>暗証番号を入力してください。</p>
-  <input id="pinInput" type="password" inputmode="numeric" maxlength="4">
-  <p>
-   <button class="admin-button" onclick="checkPin()">ログイン</button>
-   <button class="admin-button gray" onclick="showHome()">戻る</button>
-  </p>
-  <div id="pinMessage"></div>
  </div>
 </section>
 
@@ -284,16 +268,6 @@ function showPage(id){
 }
 function showHome(){stopAudio();renderToken++;showPage("home");}
 function showAdminMenu(){showPage("adminMenu");}
-function showPin(){
- stopAudio();renderToken++;
- document.getElementById("pinInput").value="";
- document.getElementById("pinMessage").textContent="";
- showPage("pinPage");
-}
-function checkPin(){
- if(document.getElementById("pinInput").value==="1234")showAdminMenu();
- else document.getElementById("pinMessage").textContent="暗証番号が違います。";
-}
 function openAdmin(which){
  if(which==="morning"){
   loadMorningSettings();
