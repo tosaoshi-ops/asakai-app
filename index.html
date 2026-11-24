@@ -1,0 +1,713 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>朝の会・帰りの会</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:"Yu Gothic","Meiryo",sans-serif;background:#f1f5f9;color:#243247}
+button,input,textarea{font:inherit}button{cursor:pointer}
+header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:23px;font-weight:bold}
+.page{display:none}.page.active{display:block}
+#home{text-align:center;padding:20px}
+.home-title{font-size:clamp(28px,5vw,44px);margin:25px 0}
+.home-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:850px;margin:30px auto}
+.home-button{min-height:180px;border:5px solid #ffd54f;border-radius:25px;background:#1768c4;color:white;font-size:clamp(27px,4vw,42px);font-weight:900;box-shadow:0 7px 0 #104b91}
+.teacher-entry{margin-top:20px;padding:13px 25px;border:2px solid #64748b;border-radius:12px;background:white;font-size:18px}
+
+/* 児童用画面 */
+#student{height:100vh;height:100svh;min-height:100svh;display:none;flex-direction:column;overflow:hidden;background:#1768c4}
+#student.active{display:flex}
+.student-heading{flex:0 0 auto;text-align:center;color:white;padding:7px;background:#104b91}
+#meetingLabel{font-size:clamp(15px,2.5vw,21px);font-weight:bold}
+#progress{font-size:clamp(13px,2vw,17px)}
+#stepTitle{font-size:clamp(22px,4vw,34px);margin:4px 0 0}
+#touchArea{flex:1 1 auto;min-height:0;width:100%;margin:0;padding:12px;border:7px solid #ffd54f;border-radius:18px;background:#1768c4;color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation;overflow:auto}
+#touchArea:active{background:#1259a9}
+#stepMessage{font-size:clamp(30px,6vw,64px);font-weight:900;line-height:1.4;overflow-wrap:anywhere}
+#stepDetail{font-size:clamp(21px,4vw,38px);font-weight:bold;line-height:1.5;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+#studentWeather{width:clamp(90px,22vw,180px);height:clamp(90px,22vw,180px);margin-top:12px}
+#studentWeather svg{width:100%;height:100%}
+#playStatus{font-size:clamp(15px,2.5vw,21px);margin-top:15px;color:#fff4b8;font-weight:bold}
+.student-controls{flex:0 0 auto;display:flex;gap:8px;padding:7px 9px max(7px,env(safe-area-inset-bottom));background:#104b91}
+.student-controls button{flex:1;min-width:0;padding:10px 3px;border:2px solid white;border-radius:10px;background:white;color:#174574;font-size:clamp(12px,2.5vw,17px);font-weight:bold;white-space:nowrap}
+.student-controls button:disabled{opacity:.4}
+
+/* 先生用画面 */
+.admin-page{max-width:950px;margin:auto;padding:18px}
+.admin-page h1{font-size:28px;margin:10px 0 20px}
+.admin-card{background:white;border-radius:15px;padding:20px;margin:15px 0;box-shadow:0 2px 8px #00000012}
+.admin-card h2{margin-top:0;font-size:22px}
+.admin-button{padding:11px 18px;border:0;border-radius:9px;background:#1768c4;color:white;font-size:17px;font-weight:bold;margin:6px 4px 6px 0}
+.admin-button.gray{background:#64748b}
+.admin-button.red{background:#c62828}
+.admin-card label{display:block;font-weight:bold;margin:14px 0 6px}
+.admin-card input,.admin-card textarea{width:100%;padding:12px;border:1px solid #94a3b8;border-radius:8px;font-size:18px}
+.admin-card textarea{min-height:75px;resize:vertical}
+
+/* 天気 */
+.weather-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0}
+.weather-button{min-width:0;aspect-ratio:1;border:4px solid #dbe3ec;border-radius:20px;background:#f8fafc;display:flex;justify-content:center;align-items:center;padding:10px}
+.weather-button.selected{border:7px solid #f2b900;background:#fff8d9}
+.weather-button svg{width:100%;height:100%;max-width:125px;max-height:125px}
+
+/* 時間割：すべて同じ幅・高さで整列 */
+.subject-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}
+.subject-button{width:100%;min-width:0;min-height:66px;height:100%;padding:8px 4px;border:3px solid #cbd5e1;border-radius:12px;background:#f8fafc;color:#243247;font-size:clamp(16px,2.7vw,22px);font-weight:bold;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
+.subject-button:active{background:#dbeafe}
+.selected-subjects{background:#f1f5f9;border-radius:10px;padding:12px;min-height:48px;font-size:17px;line-height:1.8}
+.schedule-list{list-style:none;margin:12px 0;padding:0}
+.schedule-item{display:grid;grid-template-columns:45px minmax(0,1fr) 42px;gap:8px;align-items:center;padding:7px 9px;margin:5px 0;background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;min-height:48px}
+.schedule-number{text-align:center;font-weight:bold;color:#1768c4}
+.schedule-name{font-size:18px;font-weight:bold;overflow-wrap:anywhere}
+.remove-subject{border:0;border-radius:7px;background:#64748b;color:white;font-size:19px;min-height:34px}
+.custom-subject-row{display:flex;gap:8px;align-items:stretch}
+.custom-subject-row input{flex:1;min-width:0}
+.custom-subject-row button{flex:0 0 auto}
+#adminMessage,#morningMessage{color:#1768c4;font-weight:bold;margin-top:10px}
+
+/* 録音 */
+.record-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,auto);gap:8px;align-items:center;border-top:1px solid #e2e8f0;padding:12px 0}
+.record-title{font-weight:bold;font-size:17px}
+.record-status{font-size:13px;color:#64748b}
+.record-row button{padding:9px 12px;border:0;border-radius:8px;color:white;background:#1768c4;font-size:14px;font-weight:bold}
+.record-row button.stop{background:#c62828}
+.record-row button.delete{background:#64748b}
+#pinArea{max-width:420px;margin:50px auto;text-align:center}
+#pinInput{text-align:center;font-size:28px;letter-spacing:8px}
+
+@media(max-width:600px){
+ header{font-size:19px;padding:9px}
+ #home{padding:12px}
+ .home-buttons{gap:12px;margin:20px auto}
+ .home-button{min-height:140px;font-size:clamp(22px,6vw,32px)}
+ .admin-page{padding:10px}
+ .admin-card{padding:14px}
+ .weather-grid{gap:6px}
+ .weather-button{border-radius:13px;padding:5px}
+ .weather-button.selected{border-width:5px}
+ .subject-grid{gap:7px}
+ .subject-button{min-height:58px;padding:6px 2px;font-size:clamp(14px,3.5vw,18px)}
+ .record-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .record-title{grid-column:1/-1}
+ .record-row button{padding:10px 3px;font-size:13px}
+ .custom-subject-row{flex-wrap:wrap}
+ .custom-subject-row input{flex-basis:100%}
+}
+@media(orientation:portrait){
+ #touchArea{border-width:6px;border-radius:16px;padding:8px}
+ .student-heading{padding:6px}
+ .student-controls{gap:5px;padding:6px 5px max(6px,env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+
+<header>朝の会・帰りの会</header>
+
+<section id="home" class="page active">
+ <div class="home-title">どちらの会をしますか？</div>
+ <div class="home-buttons">
+  <button class="home-button" onclick="startMeeting('morning')">朝の会</button>
+  <button class="home-button" onclick="startMeeting('closing')">帰りの会</button>
+ </div>
+ <button class="teacher-entry" onclick="showPin()">先生用設定</button>
+</section>
+
+<section id="student" class="page">
+ <div class="student-heading">
+  <div id="meetingLabel">朝の会</div>
+  <div id="progress">1 / 7</div>
+  <div id="stepTitle">おはようのあいさつ</div>
+ </div>
+ <div id="touchArea" onclick="handleTouch()">
+  <div id="stepMessage"></div>
+  <div id="stepDetail"></div>
+  <div id="studentWeather"></div>
+  <div id="playStatus"></div>
+ </div>
+ <div class="student-controls">
+  <button id="backBtn" onclick="goBack(event)">もどる</button>
+  <button onclick="goHome(event)">最初にもどる</button>
+ </div>
+</section>
+
+<section id="pinPage" class="page">
+ <div class="admin-card" id="pinArea">
+  <h2>先生用設定</h2>
+  <p>暗証番号を入力してください。</p>
+  <input id="pinInput" type="password" inputmode="numeric" maxlength="4">
+  <p>
+   <button class="admin-button" onclick="checkPin()">ログイン</button>
+   <button class="admin-button gray" onclick="showHome()">戻る</button>
+  </p>
+  <div id="pinMessage"></div>
+ </div>
+</section>
+
+<section id="adminMenu" class="page admin-page">
+ <h1>先生用設定</h1>
+ <div class="admin-card">
+  <h2>設定する会を選んでください</h2>
+  <button class="admin-button" onclick="openAdmin('morning')">朝の会の設定</button>
+  <button class="admin-button" style="background:#16845b" onclick="openAdmin('closing')">帰りの会の設定</button>
+ </div>
+ <button class="admin-button gray" onclick="showHome()">最初の画面へ戻る</button>
+</section>
+
+<section id="morningAdmin" class="page admin-page">
+ <h1>朝の会の設定</h1>
+
+ <div class="admin-card">
+  <h2>今日の天気</h2>
+  <p>イラストを1つ選んでください。</p>
+  <div class="weather-grid">
+   <button class="weather-button" data-weather="sunny" aria-label="晴れ" onclick="selectWeather('sunny')">
+    <svg viewBox="0 0 120 120"><g stroke="#f4a900" stroke-width="8" stroke-linecap="round"><path d="M60 7V22M60 98V113M7 60H22M98 60H113M22 22L33 33M87 87L98 98M98 22L87 33M33 87L22 98"/></g><circle cx="60" cy="60" r="29" fill="#ffca28" stroke="#f4a900" stroke-width="5"/></svg>
+   </button>
+   <button class="weather-button" data-weather="cloudy" aria-label="曇り" onclick="selectWeather('cloudy')">
+    <svg viewBox="0 0 120 120"><path d="M28 88C12 88 7 77 10 64C13 50 25 43 39 46C43 25 61 16 79 25C91 31 96 42 95 54C108 55 115 64 113 76C111 86 103 91 91 91H29Z" fill="#aebdce" stroke="#718096" stroke-width="6"/></svg>
+   </button>
+   <button class="weather-button" data-weather="rainy" aria-label="雨" onclick="selectWeather('rainy')">
+    <svg viewBox="0 0 120 120"><path d="M29 16C29 16 12 40 12 51C12 62 20 69 30 69C40 69 48 62 48 51C48 40 29 16 29 16Z" fill="#2196f3" stroke="#1266b0" stroke-width="3"/><path d="M82 7C82 7 65 31 65 42C65 53 73 60 83 60C93 60 101 53 101 42C101 31 82 7 82 7Z" fill="#42a5f5" stroke="#1266b0" stroke-width="3"/><path d="M57 62C57 62 40 86 40 97C40 108 48 115 58 115C68 115 76 108 76 97C76 86 57 62 57 62Z" fill="#1976d2" stroke="#1266b0" stroke-width="3"/></svg>
+   </button>
+   <button class="weather-button" data-weather="snowy" aria-label="雪" onclick="selectWeather('snowy')">
+    <svg viewBox="0 0 120 120"><g stroke="#36a6e8" stroke-width="7" stroke-linecap="round" fill="none"><path d="M60 8V112M15 34L105 86M15 86L105 34M60 8L48 21M60 8L72 21M60 112L48 99M60 112L72 99M15 34L32 35M15 34L20 50M105 86L88 85M105 86L100 70M15 86L32 85M15 86L20 70M105 34L88 35M105 34L100 50"/></g></svg>
+   </button>
+  </div>
+  <div id="weatherStatus"></div>
+ </div>
+
+ <div class="admin-card">
+  <h2>今日の時間割</h2>
+  <p>教科ボタンを押すたびに、時間割に1つ追加されます。同じ教科を何度でも追加できます。</p>
+
+  <div class="subject-grid" id="subjectGrid">
+   <button class="subject-button" onclick="addSubject('にっせい')">にっせい</button>
+   <button class="subject-button" onclick="addSubject('じかつ')">じかつ</button>
+   <button class="subject-button" onclick="addSubject('とっかつ')">とっかつ</button>
+   <button class="subject-button" onclick="addSubject('ほたい')">ほたい</button>
+   <button class="subject-button" onclick="addSubject('そうごう')">そうごう</button>
+   <button class="subject-button" onclick="addSubject('こくご')">こくご</button>
+   <button class="subject-button" onclick="addSubject('おんがく')">おんがく</button>
+   <button class="subject-button" onclick="addSubject('しゃかい')">しゃかい</button>
+   <button class="subject-button" onclick="addSubject('びじゅつ')">びじゅつ</button>
+   <button class="subject-button" onclick="addSubject('しゅうぎょうしき')">しゅうぎょうしき</button>
+   <button class="subject-button" onclick="addSubject('おんがくかんしょう')">おんがくかんしょう</button>
+   <button class="subject-button" onclick="addSubject('しぎょうしき')">しぎょうしき</button>
+   <button class="subject-button" onclick="addSubject('そつぎょうしき')">そつぎょうしき</button>
+   <button class="subject-button" onclick="addSubject('にゅうがくしき')">にゅうがくしき</button>
+  </div>
+
+  <label>教科を手動で追加</label>
+  <div class="custom-subject-row">
+   <input id="customSubjectInput" type="text" placeholder="教科名を入力してください">
+   <button class="admin-button" onclick="addCustomSubject()">追加</button>
+  </div>
+
+  <label>今日の時間割（上から順番に表示）</label>
+  <ol class="schedule-list" id="scheduleList"></ol>
+  <div id="scheduleEmpty" class="selected-subjects">まだ教科が選択されていません。</div>
+  <button class="admin-button gray" onclick="clearSubjects()">時間割をすべて解除</button>
+ </div>
+
+ <div class="admin-card">
+  <h2>今日の給食メニュー</h2>
+  <textarea id="lunchInput" placeholder="給食メニューを入力してください"></textarea>
+ </div>
+
+ <div class="admin-card">
+  <button class="admin-button" onclick="saveMorningSettings()">朝の会の設定を保存</button>
+  <div id="morningMessage"></div>
+ </div>
+
+ <div class="admin-card">
+  <h2>朝の会の録音</h2>
+  <div id="morningRecordList"></div>
+ </div>
+
+ <button class="admin-button gray" onclick="showAdminMenu()">設定メニューへ戻る</button>
+</section>
+
+<section id="closingAdmin" class="page admin-page">
+ <h1>帰りの会の設定</h1>
+ <div class="admin-card">
+  <h2>帰りの会の録音</h2>
+  <div id="closingRecordList"></div>
+ </div>
+ <button class="admin-button gray" onclick="showAdminMenu()">設定メニューへ戻る</button>
+</section>
+
+<script>
+/* 会の内容 */
+const morningSteps=[
+ {id:"greeting",title:"おはようのあいさつ",message:"おはようございます。",detail:"これから朝の会を始めます。"},
+ {id:"health",title:"健康チェック",message:"みんな元気かな。",detail:""},
+ {id:"date",title:"日付・曜日・天気",message:"今日の日付と天気を発表します。",detail:""},
+ {id:"timetable",title:"今日の時間割",message:"今日の時間割を発表します。",detail:""},
+ {id:"lunch",title:"今日の給食メニュー",message:"今日の給食メニューを発表します。",detail:""},
+ {id:"teacher",title:"先生のお話",message:"次は先生のお話です。",detail:""},
+ {id:"end",title:"朝の会のおわり",message:"これで朝の会を終わります。",detail:""}
+];
+const closingSteps=[
+ {id:"closing_greeting",title:"帰りのあいさつ",message:"これから帰りの会を始めます。",detail:""},
+ {id:"closing_teacher",title:"先生のお話",message:"先生のお話です。",detail:""},
+ {id:"closing_end",title:"帰りの会のおわり",message:"これで帰りの会を終わります。",detail:""}
+];
+
+const weatherNames={sunny:"晴れ",cloudy:"曇り",rainy:"雨",snowy:"雪"};
+const weatherSVG={
+ sunny:`<svg viewBox="0 0 120 120"><g stroke="#f4a900" stroke-width="8" stroke-linecap="round"><path d="M60 7V22M60 98V113M7 60H22M98 60H113M22 22L33 33M87 87L98 98M98 22L87 33M33 87L22 98"/></g><circle cx="60" cy="60" r="29" fill="#ffca28" stroke="#f4a900" stroke-width="5"/></svg>`,
+ cloudy:`<svg viewBox="0 0 120 120"><path d="M28 88C12 88 7 77 10 64C13 50 25 43 39 46C43 25 61 16 79 25C91 31 96 42 95 54C108 55 115 64 113 76C111 86 103 91 91 91H29Z" fill="#aebdce" stroke="#718096" stroke-width="6"/></svg>`,
+ rainy:`<svg viewBox="0 0 120 120"><path d="M29 16C29 16 12 40 12 51C12 62 20 69 30 69C40 69 48 62 48 51C48 40 29 16 29 16Z" fill="#2196f3" stroke="#1266b0" stroke-width="3"/><path d="M82 7C82 7 65 31 65 42C65 53 73 60 83 60C93 60 101 53 101 42C101 31 82 7 82 7Z" fill="#42a5f5" stroke="#1266b0" stroke-width="3"/><path d="M57 62C57 62 40 86 40 97C40 108 48 115 58 115C68 115 76 108 76 97C76 86 57 62 57 62Z" fill="#1976d2" stroke="#1266b0" stroke-width="3"/></svg>`,
+ snowy:`<svg viewBox="0 0 120 120"><g stroke="#36a6e8" stroke-width="7" stroke-linecap="round" fill="none"><path d="M60 8V112M15 34L105 86M15 86L105 34M60 8L48 21M60 8L72 21M60 112L48 99M60 112L72 99M15 34L32 35M15 34L20 50M105 86L88 85M105 86L100 70M15 86L32 85M15 86L20 70M105 34L88 35M105 34L100 50"/></g></svg>`
+};
+
+let currentMeeting="morning";
+let currentSteps=morningSteps;
+let currentIndex=0;
+let currentAudio=null;
+let currentAudioUrl=null;
+let currentAudioBlob=null;
+let audioReady=false;
+let audioPlaying=false;
+let renderToken=0;
+let selectedSubjects=[];
+let recordingStates={};
+
+/* 画面切り替え */
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+function showHome(){stopAudio();renderToken++;showPage("home");}
+function showAdminMenu(){showPage("adminMenu");}
+function showPin(){
+ stopAudio();renderToken++;
+ document.getElementById("pinInput").value="";
+ document.getElementById("pinMessage").textContent="";
+ showPage("pinPage");
+}
+function checkPin(){
+ if(document.getElementById("pinInput").value==="1234")showAdminMenu();
+ else document.getElementById("pinMessage").textContent="暗証番号が違います。";
+}
+function openAdmin(which){
+ if(which==="morning"){
+  loadMorningSettings();
+  buildRecordList("morning");
+  showPage("morningAdmin");
+ }else{
+  buildRecordList("closing");
+  showPage("closingAdmin");
+ }
+}
+
+/* IndexedDB */
+const DB_NAME="classMeetingAudioDB";
+const STORE_NAME="audio";
+function openDB(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=()=>{
+   if(!req.result.objectStoreNames.contains(STORE_NAME))req.result.createObjectStore(STORE_NAME);
+  };
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error);
+ });
+}
+async function saveAudio(id,blob){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE_NAME,"readwrite");
+  tx.objectStore(STORE_NAME).put(blob,id);
+  tx.oncomplete=()=>{db.close();resolve();};
+  tx.onerror=()=>{db.close();reject(tx.error);};
+ });
+}
+async function getAudio(id){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE_NAME,"readonly");
+  const req=tx.objectStore(STORE_NAME).get(id);
+  req.onsuccess=()=>{const value=req.result||null;db.close();resolve(value);};
+  req.onerror=()=>{db.close();reject(req.error);};
+ });
+}
+async function deleteAudio(id){
+ const db=await openDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE_NAME,"readwrite");
+  tx.objectStore(STORE_NAME).delete(id);
+  tx.oncomplete=()=>{db.close();resolve();};
+  tx.onerror=()=>{db.close();reject(tx.error);};
+ });
+}
+
+/* 設定の保存 */
+function loadSettings(){
+ try{return JSON.parse(localStorage.getItem("classMeetingSettings")||"{}");}
+ catch{return {};}
+}
+function saveSettingsObject(settings){
+ localStorage.setItem("classMeetingSettings",JSON.stringify(settings));
+}
+function loadMorningSettings(){
+ const s=loadSettings();
+ selectedSubjects=Array.isArray(s.subjects)?[...s.subjects]:[];
+ document.getElementById("lunchInput").value=s.lunch||"";
+ updateWeatherButtons();
+ updateScheduleList();
+}
+function saveMorningSettings(){
+ const s=loadSettings();
+ s.subjects=[...selectedSubjects];
+ s.lunch=document.getElementById("lunchInput").value;
+ saveSettingsObject(s);
+ document.getElementById("morningMessage").textContent="朝の会の設定を保存しました。";
+}
+
+/* 天気 */
+function selectWeather(weather){
+ const s=loadSettings();
+ s.weather=weather;
+ saveSettingsObject(s);
+ updateWeatherButtons();
+}
+function updateWeatherButtons(){
+ const s=loadSettings();
+ document.querySelectorAll(".weather-button").forEach(b=>{
+  b.classList.toggle("selected",b.dataset.weather===s.weather);
+ });
+ document.getElementById("weatherStatus").textContent=
+  "現在の選択："+(s.weather?weatherNames[s.weather]:"未選択");
+}
+
+/* 時間割：同じ教科も何度でも追加 */
+function addSubject(name){
+ selectedSubjects.push(name);
+ updateScheduleList();
+}
+function addCustomSubject(){
+ const input=document.getElementById("customSubjectInput");
+ const name=input.value.trim();
+ if(!name){alert("教科名を入力してください。");return;}
+ selectedSubjects.push(name);
+ input.value="";
+ updateScheduleList();
+}
+function removeSubject(index){
+ selectedSubjects.splice(index,1);
+ updateScheduleList();
+}
+function clearSubjects(){
+ if(selectedSubjects.length&&!confirm("時間割をすべて解除しますか？"))return;
+ selectedSubjects=[];
+ updateScheduleList();
+}
+function updateScheduleList(){
+ const list=document.getElementById("scheduleList");
+ const empty=document.getElementById("scheduleEmpty");
+ list.innerHTML="";
+ empty.style.display=selectedSubjects.length?"none":"block";
+
+ selectedSubjects.forEach((name,index)=>{
+  const li=document.createElement("li");
+  li.className="schedule-item";
+
+  const number=document.createElement("div");
+  number.className="schedule-number";
+  number.textContent=(index+1)+".";
+
+  const text=document.createElement("div");
+  text.className="schedule-name";
+  text.textContent=name;
+
+  const remove=document.createElement("button");
+  remove.className="remove-subject";
+  remove.textContent="×";
+  remove.setAttribute("aria-label",name+"を削除");
+  remove.onclick=()=>removeSubject(index);
+
+  li.append(number,text,remove);
+  list.appendChild(li);
+ });
+}
+
+/* 児童用画面 */
+function startMeeting(which){
+ stopAudio();
+ currentMeeting=which;
+ currentSteps=which==="morning"?morningSteps:closingSteps;
+ currentIndex=0;
+ renderStudent();
+}
+function stopAudio(){
+ if(currentAudio){
+  currentAudio.pause();
+  currentAudio.onended=null;
+  currentAudio.onerror=null;
+  currentAudio=null;
+ }
+ if(currentAudioUrl){
+  URL.revokeObjectURL(currentAudioUrl);
+  currentAudioUrl=null;
+ }
+ currentAudioBlob=null;
+ audioPlaying=false;
+}
+function getStepDetail(step){
+ const s=loadSettings();
+ if(step.id==="date"){
+  const now=new Date();
+  return `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
+ }
+ if(step.id==="timetable"){
+  return s.subjects&&s.subjects.length
+   ?s.subjects.map((v,i)=>`${i+1}. ${v}`).join("\n")
+   :"時間割は先生に聞いてね。";
+ }
+ if(step.id==="lunch")return s.lunch||"給食メニュー";
+ return step.detail||"";
+}
+async function renderStudent(){
+ stopAudio();
+ const token=++renderToken;
+ const step=currentSteps[currentIndex];
+ showPage("student");
+
+ document.getElementById("meetingLabel").textContent=currentMeeting==="morning"?"朝の会":"帰りの会";
+ document.getElementById("progress").textContent=`${currentIndex+1} / ${currentSteps.length}`;
+ document.getElementById("stepTitle").textContent=step.title;
+ document.getElementById("stepMessage").textContent=step.message;
+ document.getElementById("stepDetail").textContent=getStepDetail(step);
+ document.getElementById("studentWeather").innerHTML="";
+ document.getElementById("playStatus").textContent="準備中…";
+ document.getElementById("backBtn").disabled=currentIndex===0;
+
+ if(step.id==="date"){
+  const s=loadSettings();
+  if(s.weather&&weatherSVG[s.weather]){
+   document.getElementById("studentWeather").innerHTML=weatherSVG[s.weather];
+  }
+ }
+
+ audioReady=false;
+ currentAudioBlob=null;
+ try{
+  const blob=await getAudio(step.id);
+  if(token!==renderToken)return;
+  currentAudioBlob=blob;
+  audioReady=true;
+  document.getElementById("playStatus").textContent=
+   blob?"画面をタッチしてください。":"画面をタッチすると次へ進みます。";
+ }catch{
+  if(token!==renderToken)return;
+  audioReady=true;
+  currentAudioBlob=null;
+  document.getElementById("playStatus").textContent="画面をタッチすると次へ進みます。";
+ }
+}
+
+/* タッチ操作：
+   音声再生中なら停止して即座に次へ。
+   再生中でなければ音声を再生。
+   録音がなければ次へ。 */
+function handleTouch(){
+ if(!audioReady)return;
+
+ if(audioPlaying){
+  advanceStep();
+  return;
+ }
+ if(!currentAudioBlob){
+  advanceStep();
+  return;
+ }
+ playCurrentAudio();
+}
+function playCurrentAudio(){
+ if(!currentAudioBlob||audioPlaying)return;
+
+ const blob=currentAudioBlob;
+ currentAudioUrl=URL.createObjectURL(blob);
+ currentAudio=new Audio(currentAudioUrl);
+ audioPlaying=true;
+ document.getElementById("playStatus").textContent="おはなしをきいてね。";
+
+ currentAudio.onended=()=>{
+  audioPlaying=false;
+  if(currentAudioUrl){URL.revokeObjectURL(currentAudioUrl);currentAudioUrl=null;}
+  currentAudio=null;
+  advanceStep();
+ };
+ currentAudio.onerror=()=>{
+  audioPlaying=false;
+  document.getElementById("playStatus").textContent="音声を再生できませんでした。画面をタッチすると次へ進みます。";
+ };
+ const promise=currentAudio.play();
+ if(promise&&promise.catch){
+  promise.catch(()=>{
+   audioPlaying=false;
+   document.getElementById("playStatus").textContent="音声を再生できませんでした。画面をタッチすると次へ進みます。";
+  });
+ }
+}
+function advanceStep(){
+ stopAudio();
+ if(currentIndex<currentSteps.length-1){
+  currentIndex++;
+  renderStudent();
+ }else{
+  showHome();
+ }
+}
+function goBack(event){
+ if(event)event.stopPropagation();
+ stopAudio();
+ if(currentIndex>0){currentIndex--;renderStudent();}
+}
+function goHome(event){
+ if(event)event.stopPropagation();
+ showHome();
+}
+
+/* 録音一覧 */
+function getRecordingItems(which){
+ return which==="morning"?morningSteps:closingSteps;
+}
+async function buildRecordList(which){
+ const list=document.getElementById(which==="morning"?"morningRecordList":"closingRecordList");
+ list.innerHTML="";
+ for(const item of getRecordingItems(which)){
+  const row=document.createElement("div");
+  row.className="record-row";
+
+  const titleArea=document.createElement("div");
+  titleArea.className="record-title";
+  const title=document.createElement("div");
+  title.textContent=item.title;
+  const status=document.createElement("div");
+  status.className="record-status";
+  status.textContent="確認中…";
+  titleArea.append(title,status);
+
+  const rec=document.createElement("button");
+  rec.textContent="録音";
+  rec.onclick=()=>startRecording(item,status,rec);
+
+  const play=document.createElement("button");
+  play.textContent="試聴";
+  play.onclick=()=>previewItem(item.id);
+
+  const del=document.createElement("button");
+  del.textContent="削除";
+  del.className="delete";
+  del.onclick=()=>removeItem(item.id,status);
+
+  row.append(titleArea,rec,play,del);
+  list.appendChild(row);
+
+  try{
+   const blob=await getAudio(item.id);
+   status.textContent=blob?"録音済み":"未録音";
+  }catch{status.textContent="確認できません";}
+ }
+}
+
+/* 録音開始・停止 */
+async function startRecording(item,statusElement,button){
+ if(recordingStates[item.id]){
+  stopRecording(item.id);
+  return;
+ }
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+  alert("このブラウザでは録音できません。HTTPSで開いているか確認してください。");
+  return;
+ }
+
+ let stream;
+ try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+ catch{alert("マイクを使用できません。ブラウザのマイク使用を許可してください。");return;}
+
+ const chunks=[];
+ let options={};
+ if(MediaRecorder.isTypeSupported("audio/mp4"))options.mimeType="audio/mp4";
+ else if(MediaRecorder.isTypeSupported("audio/webm;codecs=opus"))options.mimeType="audio/webm;codecs=opus";
+ else if(MediaRecorder.isTypeSupported("audio/webm"))options.mimeType="audio/webm";
+
+ let recorder;
+ try{recorder=new MediaRecorder(stream,options);}
+ catch{
+  stream.getTracks().forEach(t=>t.stop());
+  alert("この端末では録音を開始できませんでした。");
+  return;
+ }
+
+ recordingStates[item.id]={recorder,stream,chunks,statusElement,button};
+ button.textContent="録音終了";
+ button.classList.add("stop");
+ statusElement.textContent="録音中…";
+
+ recorder.ondataavailable=e=>{
+  if(e.data&&e.data.size>0)chunks.push(e.data);
+ };
+ recorder.onstop=async()=>{
+  stream.getTracks().forEach(t=>t.stop());
+  const blob=new Blob(chunks,{type:recorder.mimeType||"audio/webm"});
+  delete recordingStates[item.id];
+  button.textContent="録音";
+  button.classList.remove("stop");
+
+  try{
+   if(blob.size>0){
+    await saveAudio(item.id,blob);
+    statusElement.textContent="録音済み";
+    alert("録音を保存しました。");
+   }else{
+    statusElement.textContent="録音できませんでした";
+    alert("音声データがありません。もう一度録音してください。");
+   }
+  }catch{
+   statusElement.textContent="保存失敗";
+   alert("録音の保存に失敗しました。");
+  }
+ };
+ recorder.start();
+}
+function stopRecording(id){
+ const state=recordingStates[id];
+ if(state&&state.recorder.state!=="inactive")state.recorder.stop();
+}
+
+/* 試聴・削除 */
+async function previewItem(id){
+ try{
+  const blob=await getAudio(id);
+  if(!blob){alert("この項目はまだ録音されていません。");return;}
+  const url=URL.createObjectURL(blob);
+  const audio=new Audio(url);
+  audio.onended=()=>URL.revokeObjectURL(url);
+  audio.onerror=()=>URL.revokeObjectURL(url);
+  await audio.play();
+ }catch{alert("音声を再生できませんでした。");}
+}
+async function removeItem(id,statusElement){
+ if(!confirm("この録音を削除しますか？"))return;
+ try{
+  await deleteAudio(id);
+  statusElement.textContent="未録音";
+  alert("録音を削除しました。");
+ }catch{alert("削除できませんでした。");}
+}
+
+/* 起動時 */
+document.addEventListener("DOMContentLoaded",()=>{
+ updateWeatherButtons();
+ updateScheduleList();
+});
+</script>
+</body>
+</html>
