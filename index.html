@@ -28,6 +28,10 @@ header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:2
 #touchArea:active{background:#1259a9}
 #stepMessage{font-size:clamp(30px,6vw,64px);font-weight:900;line-height:1.4;overflow-wrap:anywhere}
 #stepDetail{font-size:clamp(21px,4vw,38px);font-weight:bold;line-height:1.5;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.timetable-display{display:grid;gap:5px;width:fit-content;max-width:100%;margin:0 auto;text-align:left}
+.timetable-row{display:grid;grid-template-columns:2.8em minmax(0,1fr);column-gap:0.55em;align-items:baseline}
+.timetable-number{text-align:right;white-space:nowrap}
+.timetable-subject{text-align:left;overflow-wrap:anywhere}
 #studentWeather{width:clamp(90px,22vw,180px);height:clamp(90px,22vw,180px);margin-top:12px}
 #studentWeather svg{width:100%;height:100%}
 #playStatus{font-size:clamp(15px,2.5vw,21px);margin-top:15px;color:#fff4b8;font-weight:bold}
@@ -218,6 +222,37 @@ header{background:#1768c4;color:white;padding:12px;text-align:center;font-size:2
 <section id="closingAdmin" class="page admin-page">
  <h1>帰りの会の設定</h1>
  <div class="admin-card">
+  <h2>明日の時間割</h2>
+  <p>教科ボタンを押すと、明日の時間割に追加されます。同じ教科も何度でも追加できます。</p>
+  <div class="subject-grid" id="tomorrowSubjectGrid">
+   <button class="subject-button" onclick="addTomorrowSubject('にっせい')">にっせい</button>
+   <button class="subject-button" onclick="addTomorrowSubject('じかつ')">じかつ</button>
+   <button class="subject-button" onclick="addTomorrowSubject('とっかつ')">とっかつ</button>
+   <button class="subject-button" onclick="addTomorrowSubject('ほたい')">ほたい</button>
+   <button class="subject-button" onclick="addTomorrowSubject('そうごう')">そうごう</button>
+   <button class="subject-button" onclick="addTomorrowSubject('こくご')">こくご</button>
+   <button class="subject-button" onclick="addTomorrowSubject('おんがく')">おんがく</button>
+   <button class="subject-button" onclick="addTomorrowSubject('しゃかい')">しゃかい</button>
+   <button class="subject-button" onclick="addTomorrowSubject('びじゅつ')">びじゅつ</button>
+   <button class="subject-button" onclick="addTomorrowSubject('しゅうぎょうしき')">しゅうぎょうしき</button>
+   <button class="subject-button" onclick="addTomorrowSubject('おんがくかんしょう')">おんがくかんしょう</button>
+   <button class="subject-button" onclick="addTomorrowSubject('しぎょうしき')">しぎょうしき</button>
+   <button class="subject-button" onclick="addTomorrowSubject('そつぎょうしき')">そつぎょうしき</button>
+   <button class="subject-button" onclick="addTomorrowSubject('にゅうがくしき')">にゅうがくしき</button>
+  </div>
+  <label>教科を手動で追加</label>
+  <div class="custom-subject-row">
+   <input id="tomorrowCustomSubjectInput" type="text" placeholder="教科名を入力してください">
+   <button class="admin-button" onclick="addCustomTomorrowSubject()">追加</button>
+  </div>
+  <label>明日の時間割（上から順番に表示）</label>
+  <ol class="schedule-list" id="tomorrowScheduleList"></ol>
+  <div id="tomorrowScheduleEmpty" class="selected-subjects">まだ教科が選択されていません。</div>
+  <button class="admin-button gray" onclick="clearTomorrowSubjects()">明日の時間割をすべて解除</button>
+  <button class="admin-button" onclick="saveTomorrowSchedule()">明日の時間割を保存</button>
+  <div id="tomorrowScheduleMessage"></div>
+ </div>
+ <div class="admin-card">
   <h2>帰りの会の録音</h2>
   <div id="closingRecordList"></div>
  </div>
@@ -237,7 +272,8 @@ const morningSteps=[
 ];
 const closingSteps=[
  {id:"closing_greeting",title:"帰りのあいさつ",message:"これから帰りの会を始めます。",detail:""},
- {id:"closing_teacher",title:"先生のお話",message:"先生のお話です。",detail:""},
+ {id:"closing_reflection",title:"今日の振り返り",message:"今日の時間割を振り返ります。",detail:""},
+ {id:"closing_timetable",title:"明日の時間割発表",message:"明日の時間割を発表します。",detail:""},
  {id:"closing_end",title:"帰りの会のおわり",message:"これで帰りの会を終わります。",detail:""}
 ];
 
@@ -259,6 +295,7 @@ let audioReady=false;
 let audioPlaying=false;
 let renderToken=0;
 let selectedSubjects=[];
+let tomorrowSubjects=[];
 let recordingStates={};
 
 /* 画面切り替え */
@@ -274,6 +311,7 @@ function openAdmin(which){
   buildRecordList("morning");
   showPage("morningAdmin");
  }else{
+  loadTomorrowSchedule();
   buildRecordList("closing");
   showPage("closingAdmin");
  }
@@ -341,6 +379,53 @@ function saveMorningSettings(){
  s.lunch=document.getElementById("lunchInput").value;
  saveSettingsObject(s);
  document.getElementById("morningMessage").textContent="朝の会の設定を保存しました。";
+}
+function loadTomorrowSchedule(){
+ const s=loadSettings();
+ tomorrowSubjects=Array.isArray(s.tomorrowSubjects)?[...s.tomorrowSubjects]:[];
+ updateTomorrowScheduleList();
+ document.getElementById("tomorrowScheduleMessage").textContent="";
+}
+function saveTomorrowSchedule(){
+ const s=loadSettings();
+ s.tomorrowSubjects=[...tomorrowSubjects];
+ saveSettingsObject(s);
+ document.getElementById("tomorrowScheduleMessage").textContent="明日の時間割を保存しました。";
+}
+function addTomorrowSubject(name){
+ tomorrowSubjects.push(name);
+ updateTomorrowScheduleList();
+}
+function addCustomTomorrowSubject(){
+ const input=document.getElementById("tomorrowCustomSubjectInput");
+ const name=input.value.trim();
+ if(!name){alert("教科名を入力してください。");return;}
+ tomorrowSubjects.push(name);
+ input.value="";
+ updateTomorrowScheduleList();
+}
+function removeTomorrowSubject(index){
+ tomorrowSubjects.splice(index,1);
+ updateTomorrowScheduleList();
+}
+function clearTomorrowSubjects(){
+ if(tomorrowSubjects.length&&!confirm("明日の時間割をすべて解除しますか？"))return;
+ tomorrowSubjects=[];
+ updateTomorrowScheduleList();
+}
+function updateTomorrowScheduleList(){
+ const list=document.getElementById("tomorrowScheduleList");
+ const empty=document.getElementById("tomorrowScheduleEmpty");
+ list.innerHTML="";
+ empty.style.display=tomorrowSubjects.length?"none":"block";
+ tomorrowSubjects.forEach((name,index)=>{
+  const li=document.createElement("li"); li.className="schedule-item";
+  const number=document.createElement("div"); number.className="schedule-number"; number.textContent=(index+1)+".";
+  const text=document.createElement("div"); text.className="schedule-name"; text.textContent=name;
+  const remove=document.createElement("button"); remove.className="remove-subject"; remove.textContent="×";
+  remove.setAttribute("aria-label",name+"を削除"); remove.onclick=()=>removeTomorrowSubject(index);
+  li.append(number,text,remove); list.appendChild(li);
+ });
 }
 
 /* 天気 */
@@ -438,10 +523,15 @@ function getStepDetail(step){
   const now=new Date();
   return `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
  }
- if(step.id==="timetable"){
+ if(step.id==="timetable"||step.id==="closing_reflection"){
   return s.subjects&&s.subjects.length
    ?s.subjects.map((v,i)=>`${i+1}. ${v}`).join("\n")
-   :"時間割は先生に聞いてね。";
+   :"今日の時間割は設定されていません。";
+ }
+ if(step.id==="closing_timetable"){
+  return s.tomorrowSubjects&&s.tomorrowSubjects.length
+   ?s.tomorrowSubjects.map((v,i)=>`${i+1}. ${v}`).join("\n")
+   :"明日の時間割は先生に聞いてね。";
  }
  if(step.id==="lunch")return s.lunch||"給食メニュー";
  return step.detail||"";
@@ -456,7 +546,30 @@ async function renderStudent(){
  document.getElementById("progress").textContent=`${currentIndex+1} / ${currentSteps.length}`;
  document.getElementById("stepTitle").textContent=step.title;
  document.getElementById("stepMessage").textContent=step.message;
- document.getElementById("stepDetail").textContent=getStepDetail(step);
+ const detailElement=document.getElementById("stepDetail");
+ detailElement.textContent=getStepDetail(step);
+ if(step.id==="timetable"||step.id==="closing_reflection"||step.id==="closing_timetable"){
+  const settings=loadSettings();
+  const subjects=step.id==="closing_timetable"?(settings.tomorrowSubjects||[]):(settings.subjects||[]);
+  if(subjects.length){
+   detailElement.textContent="";
+   const timetable=document.createElement("div");
+   timetable.className="timetable-display";
+   subjects.forEach((subject,index)=>{
+    const row=document.createElement("div");
+    row.className="timetable-row";
+    const number=document.createElement("span");
+    number.className="timetable-number";
+    number.textContent=(index+1)+".";
+    const name=document.createElement("span");
+    name.className="timetable-subject";
+    name.textContent=subject;
+    row.append(number,name);
+    timetable.appendChild(row);
+   });
+   detailElement.appendChild(timetable);
+  }
+ }
  document.getElementById("studentWeather").innerHTML="";
  document.getElementById("playStatus").textContent="準備中…";
  document.getElementById("backBtn").disabled=currentIndex===0;
